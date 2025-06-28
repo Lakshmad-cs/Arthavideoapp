@@ -79,16 +79,42 @@
       }
     }
 
-    function uploadVideo() {
-      const title = document.getElementById('title').value;
-      const grade = document.getElementById('grade').value;
-      const file = document.getElementById('videoFile').files[0];
-      const status = document.getElementById('status');
+   function uploadVideo() {
+  const title = document.getElementById('title').value;
+  const grade = document.getElementById('grade').value;
+  const file = document.getElementById('videoFile').files[0];
+  const status = document.getElementById('status');
 
-      if (!title || !grade || !file) {
-        status.innerText = "Please fill all fields and select a video.";
-        return;
-      }
+  if (!title || !grade || !file) {
+    status.innerText = "Please fill all fields and select a video.";
+    return;
+  }
+
+  const fileRef = storage.ref('videos/' + Date.now() + '_' + file.name);
+  status.innerText = "Uploading...";
+
+  fileRef.put(file)
+    .then(snapshot => {
+      console.log('Upload success');
+      return snapshot.ref.getDownloadURL();
+    })
+    .then(url => {
+      return db.collection("videos").add({
+        title: title,
+        grade: grade,
+        url: url,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    })
+    .then(() => {
+      status.innerText = "✅ Video uploaded successfully!";
+    })
+    .catch(error => {
+      console.error('Upload failed:', error);
+      status.innerText = "❌ Upload failed: " + error.message;
+    });
+}
+
 
       const fileRef = storage.ref('videos/' + Date.now() + '_' + file.name);
       fileRef.put(file).then(snapshot => {
