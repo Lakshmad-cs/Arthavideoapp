@@ -1,0 +1,111 @@
+<!-- teacher.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Teacher Upload - Artha Education</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="loginBox">
+    <h2>Teacher Login</h2>
+    <input type="password" id="teacherPass" placeholder="Enter Password">
+    <button onclick="checkTeacherLogin()">Login</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <div class="container hidden" id="uploadPanel">
+    <h2>📤 Upload Video Lesson</h2>
+    <input type="text" id="title" placeholder="Video Title">
+    <input type="text" id="grade" placeholder="Grade (e.g., Grade 6)">
+    <input type="file" id="videoFile" accept="video/mp4">
+    <button onclick="uploadVideo()">Upload</button>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfP2ID9O6pP_dTFVvIHgTddYP1OovWxpY",
+      authDomain: "arthavideoapp.firebaseapp.com",
+      projectId: "arthavideoapp",
+      storageBucket: "arthavideoapp.appspot.com",
+      messagingSenderId: "507358686788",
+      appId: "1:507358686788:web:placeholderAppId"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
+    const db = firebase.firestore();
+
+    function checkTeacherLogin() {
+      const pass = document.getElementById("teacherPass").value;
+      if (pass === "ArthaEDU") {
+        document.getElementById("loginBox").classList.add("hidden");
+        document.getElementById("uploadPanel").classList.remove("hidden");
+      } else {
+        document.getElementById("loginError").textContent = "Incorrect password.";
+      }
+    }
+
+    function uploadVideo() {
+      const title = document.getElementById('title').value;
+      const grade = document.getElementById('grade').value;
+      const file = document.getElementById('videoFile').files[0];
+      const status = document.getElementById('status');
+
+      if (!title || !grade || !file) {
+        status.innerText = "Please fill all fields and select a video.";
+        return;
+      }
+
+      const fileRef = storage.ref('videos/' + Date.now() + '_' + file.name);
+      fileRef.put(file).then(snapshot => {
+        return snapshot.ref.getDownloadURL();
+      }).then(url => {
+        return db.collection("videos").add({
+          title: title,
+          grade: grade,
+          url: url,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }).then(() => {
+        status.innerText = "✅ Video uploaded successfully!";
+      }).catch(error => {
+        status.innerText = "❌ Upload failed: " + error.message;
+      });
+    }
+  </script>
+</body>
+</html>

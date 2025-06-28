@@ -1,0 +1,122 @@
+<!-- student.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Video Portal - Artha Education</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    select, button, input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    video {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .video-block {
+      margin-bottom: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="loginBox">
+    <h2>Student Login</h2>
+    <input type="password" id="studentPass" placeholder="Enter Password">
+    <button onclick="checkStudentLogin()">Login</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <div class="container hidden" id="studentPanel">
+    <h2>🎥 Video Lessons</h2>
+    <select id="gradeFilter">
+      <option value="all">All Grades</option>
+      <option value="Grade 6">Grade 6</option>
+      <option value="Grade 7">Grade 7</option>
+      <option value="Grade 8">Grade 8</option>
+    </select>
+    <div id="videoList">Loading videos...</div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfP2ID9O6pP_dTFVvIHgTddYP1OovWxpY",
+      authDomain: "arthavideoapp.firebaseapp.com",
+      projectId: "arthavideoapp",
+      storageBucket: "arthavideoapp.appspot.com",
+      messagingSenderId: "507358686788",
+      appId: "1:507358686788:web:placeholderAppId"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const gradeFilter = document.getElementById("gradeFilter");
+    const videoList = document.getElementById("videoList");
+
+    function checkStudentLogin() {
+      const pass = document.getElementById("studentPass").value;
+      if (pass === "Artha") {
+        document.getElementById("loginBox").classList.add("hidden");
+        document.getElementById("studentPanel").classList.remove("hidden");
+        loadVideos("all");
+      } else {
+        document.getElementById("loginError").textContent = "Incorrect password.";
+      }
+    }
+
+    function loadVideos(grade) {
+      videoList.innerHTML = "Loading...";
+      db.collection("videos").orderBy("createdAt", "desc").get().then(snapshot => {
+        videoList.innerHTML = "";
+        snapshot.forEach(doc => {
+          const v = doc.data();
+          if (grade === "all" || v.grade === grade) {
+            videoList.innerHTML += `
+              <div class="video-block">
+                <h4>${v.title} (${v.grade})</h4>
+                <video controls>
+                  <source src="${v.url}" type="video/mp4">
+                </video>
+              </div>
+            `;
+          }
+        });
+        if (!videoList.innerHTML) {
+          videoList.innerHTML = "<p>No videos available for this grade.</p>";
+        }
+      });
+    }
+
+    gradeFilter.onchange = () => loadVideos(gradeFilter.value);
+  </script>
+</body>
+</html>
+
+<!-- teacher.html follows similar style, let me know if you want it added too. -->
